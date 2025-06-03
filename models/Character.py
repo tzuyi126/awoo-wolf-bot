@@ -6,5 +6,5 @@ class Character:
         self.pic = pic
 
 class Villager(Character):
-    def __init__(self, role="Villager", personality="good", pic=None):
-        super().__init__(role, personality, pic)
+    def __init__(self):
+        super().__init__("Villager", "good", None)

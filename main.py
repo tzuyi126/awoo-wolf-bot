@@ -4,7 +4,7 @@ import logging
 from dotenv import load_dotenv
 import os
 
-from game import start_game
+from game import Game
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -16,13 +16,11 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-@bot.event
-async def on_ready():
-    print(f'Logging in as {bot.user.name}!')
 
 @bot.event
-async def on_member_join(member):
-    await member.send(f'Welcome to the server, {member.name}!')
+async def on_ready():
+    print(f"Logged in as {bot.user.name}")
+
 
 @bot.event
 async def on_message(message):
@@ -32,57 +30,83 @@ async def on_message(message):
     # Call default command in on_message method
     await bot.process_commands(message)
 
+
+@bot.command(name="gamehelp")
+async def gamehelp(ctx):
+    help_text = (
+        "AWOOOOO! Welcome! Here are the commands you can use:\n"
+        "`!new` - Start a new game.\n"
+        "`!join` - Join the current game.\n"
+        "`!list` - List all players in the current game.\n"
+        "`!start` - Start the game if enough players have joined (at least 6, at most 12).\n"
+        "`!end` - End the current game.\n"
+    )
+    await ctx.send(help_text)
+
+
 @bot.command()
-async def start(ctx):
+async def new(ctx):
     # Prevent multiple games in the same channel
-    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels:
+    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
         await ctx.reply("A game is already being set up in this channel.")
         return
+    
     if not hasattr(bot, "active_game_channels"):
-        bot.active_game_channels = set()
-    bot.active_game_channels.add(ctx.channel.id)
+        bot.active_game_channels = {}
 
-    await ctx.reply("Game is starting! Type `!join` to join the game.")
-    bot.players = set()
+    bot.active_game_channels[ctx.channel.id] = Game(ctx.channel.id)
+    await ctx.reply("New game is created! Type `!join` to join the game. (At least 6 players are required to start the game.)")
 
-    try:
-        while True:
-            try:
-                join_msg = await bot.wait_for(
-                    'message',
-                    timeout=120.0,
-                    check=lambda m: (m.content.lower() in ["!join", "!list", "!go"]) and m.channel == ctx.channel
-                )
 
-                if join_msg.content.lower() == "!join":
-                    if join_msg.author not in bot.players:
-                        bot.players.add(join_msg.author)
-                        await join_msg.reply(f"{join_msg.author.mention} has joined the game!")
-                elif join_msg.content.lower() == "!list":
-                    if bot.players:
-                        await join_msg.reply("Players in the game:\n" + "\n".join([player.mention for player in bot.players]))
-                    else:
-                        await join_msg.reply("No players have joined the game yet.")
+@bot.command()
+async def join(ctx):
+    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
+        game = bot.active_game_channels[ctx.channel.id]
 
-                elif join_msg.content.lower() == "!go":
-                    if len(bot.players) < 6:
-                        await join_msg.reply("Not enough players joined. At least 6 players are required to start the game.")
-                    else:
-                        break
-            except Exception:
-                break
-        
-        if len(bot.players) < 6:
-            await ctx.send("Not enough players joined. At least 6 players are required to start the game.")
+        if not game.add_player(ctx.author):
+            await ctx.reply(f"{ctx.author.mention}, you cannot join the game at this moment!")
             return
 
-        await ctx.send("Game is starting now!")
-        await start_game(ctx.channel.id, list(bot.players))
-    finally:
-        # Clean up channel from active games
-        if hasattr(bot, "active_game_channels"):
-            bot.active_game_channels.discard(ctx.channel.id)
-        bot.players = set()
-        await ctx.send("Game has ended.")
+        await ctx.reply(f"{ctx.author.mention} has joined the game! Current players: `{game.num_players}`")
+    else:
+        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
+
+
+@bot.command()
+async def list(ctx):
+    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
+        game = bot.active_game_channels[ctx.channel.id]
+
+        if game.players:
+            await ctx.reply(f"A total of `{game.num_players}` player(s) in the game:\n {"\n".join([player.mention for player in game.players])}")
+        else:
+            await ctx.reply("No players have joined the game yet.")
+    else:
+        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
+
+
+@bot.command()
+async def start(ctx):
+    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
+        game = bot.active_game_channels[ctx.channel.id]
+
+        if not game.check_start_conditions():
+            await ctx.reply("Cannot start the game. Either the game is already in progress or the number of players is not sufficient (6-12).")
+            return
+
+        await ctx.reply("Game is starting now!")
+        game.start()
+    else:
+        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
+
+
+@bot.command()
+async def end(ctx):
+    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
+        del bot.active_game_channels[ctx.channel.id]
+        await ctx.reply("The game has ended.")
+    else:
+        await ctx.reply("No game is currently active in this channel.")
+
 
 bot.run(token=token, log_handler=handler, log_level=logging.DEBUG)
