@@ -2,10 +2,13 @@ from models.Character import get_character_by_name
 from models.Player import Player, User
 import uuid
 import random
-import os
+from dotenv import load_dotenv
 import json
+import os
 
-
+load_dotenv(override=True)
+min_players = int(os.getenv("MIN_PLAYERS"))
+max_players = int(os.getenv("MAX_PLAYERS"))
 roles_env = os.getenv("GAME_ROLES")
 
 
@@ -21,7 +24,7 @@ class Game:
     
 
     def add_player(self, player):
-        if not self.game_state == "starting" or self.num_players >= 12:
+        if not self.game_state == "starting" or self.num_players >= max_players:
             return False
         
         if player.id not in self.players:
@@ -37,7 +40,7 @@ class Game:
         if not self.game_state == "starting":
             return False
 
-        '''if not 6 <= self.num_players <= 12:
+        '''if not min_players <= self.num_players <= max_players:
             return False'''
         while self.num_players < 6:
             i = self.num_players

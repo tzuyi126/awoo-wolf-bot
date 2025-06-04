@@ -3,10 +3,11 @@ from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
+from collections import Counter
 
 from game import Game
 
-load_dotenv()
+load_dotenv(override=True)
 token = os.getenv('DISCORD_TOKEN')
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
@@ -38,7 +39,7 @@ async def gamehelp(ctx):
         "`!new` - Start a new game.\n"
         "`!join` - Join the current game.\n"
         "`!list` - List all players in the current game.\n"
-        "`!start` - Start the game if enough players have joined (at least 6, at most 12).\n"
+        f"`!start` - Start the game if enough players have joined (at least {os.getenv('MIN_PLAYERS')}, at most {os.getenv('MAX_PLAYERS')}).\n"
         "`!check` - Check your role in the game.\n"
         "`!end` - End the current game.\n"
     )
@@ -56,7 +57,7 @@ async def new(ctx):
         bot.active_game_channels = {}
 
     bot.active_game_channels[ctx.channel.id] = Game(ctx.channel.id)
-    await ctx.reply("New game is created! Type `!join` to join the game. (At least 6 players are required to start the game.)")
+    await ctx.reply("New game is created! Type `!join` to join the game.")
 
 
 @bot.command()
@@ -85,7 +86,9 @@ async def list(ctx):
             )
 
             if game.roles:
-                msg += f"\nRoles for this game: {', '.join(game.roles)}"
+                role_counts = Counter(game.roles)
+                roles_str = ', '.join([f"{role} x {count}" if count > 1 else f"{role}" for role, count in role_counts.items()])
+                msg += f"\nRoles for this game: {roles_str}"
 
             await ctx.reply(msg)
         else:
@@ -100,7 +103,7 @@ async def start(ctx):
         game = bot.active_game_channels[ctx.channel.id]
 
         if not game.check_start_conditions():
-            await ctx.reply("Cannot start the game. Either the game is already in progress or the number of players is not sufficient (6-12).")
+            await ctx.reply("Cannot start the game. Either the game is already in progress or the number of players is not sufficient.")
             return
 
         await ctx.send("AWOOOOO! The game is starting! Prepare yourselves!")
@@ -121,10 +124,12 @@ async def check(ctx):
 
             if player.character:
                 embed = discord.Embed(
-                    title=f"{player.character.role}",
+                    title=f"You are a {player.character.role}",
                     description=f"{player.__str__()}",
                     color=discord.Color.blue() if player.character.personality == "good" else discord.Color.red()
                 )
+
+                embed.add_field(name="Ability", value=player.character.ability, inline=True)
 
                 embed.set_thumbnail(url=f"attachment://{os.path.basename(player.character.pic)}")  # fallback if file not found
 
