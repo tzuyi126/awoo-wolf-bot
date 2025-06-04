@@ -39,6 +39,7 @@ async def gamehelp(ctx):
         "`!join` - Join the current game.\n"
         "`!list` - List all players in the current game.\n"
         "`!start` - Start the game if enough players have joined (at least 6, at most 12).\n"
+        "`!check` - Check your role in the game.\n"
         "`!end` - End the current game.\n"
     )
     await ctx.send(help_text)
@@ -77,8 +78,8 @@ async def list(ctx):
     if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
         game = bot.active_game_channels[ctx.channel.id]
 
-        if game.players:
-            await ctx.reply(f"A total of `{game.num_players}` player(s) in the game:\n {"\n".join([player.mention for player in game.players])}")
+        if game.num_players > 0:
+            await ctx.reply(f"A total of `{game.num_players}` player(s) in the game:\n {"\n".join([player.mention for player in game.players.values()])}")
         else:
             await ctx.reply("No players have joined the game yet.")
     else:
@@ -94,8 +95,38 @@ async def start(ctx):
             await ctx.reply("Cannot start the game. Either the game is already in progress or the number of players is not sufficient (6-12).")
             return
 
-        await ctx.reply("Game is starting now!")
+        await ctx.send("AWOOOOO! The game is starting! Prepare yourselves!")
         game.start()
+
+        await ctx.send("Characters have been assigned. Use `!check` to see your role.")
+    else:
+        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
+
+
+@bot.command()
+async def check(ctx):
+    if hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys():
+        game = bot.active_game_channels[ctx.channel.id]
+
+        if ctx.author.id in game.players:
+            player = game.players[ctx.author.id]
+
+            if player.character:
+                embed = discord.Embed(
+                    title=f"{player.character.role}",
+                    description=f"{player.__str__()}",
+                    color=discord.Color.blue() if player.character.personality == "good" else discord.Color.red()
+                )
+
+                embed.set_thumbnail(url=f"attachment://{os.path.basename(player.character.pic)}")  # fallback if file not found
+
+                file = discord.File(player.character.pic, filename=f"{os.path.basename(player.character.pic)}")
+
+                await ctx.reply(embed=embed, file=file, ephemeral=True)
+            else:
+                await ctx.reply("The game has not started yet. Please wait until the game starts.", ephemeral=True)
+        else:
+            await ctx.reply("You are not part of the current game.", ephemeral=True)
     else:
         await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
 
