@@ -109,7 +109,14 @@ async def start(ctx):
         await ctx.send("AWOOOOO! The game is starting! Prepare yourselves!")
         game.start()
 
-        await ctx.send("Characters have been assigned. Use `!check` to see your role.")
+        for player in game.players.values():
+            try:
+                embed, file = create_embed(player)
+                await player.user.send(embed=embed, file=file)
+            except Exception:
+                await ctx.send(f"Could not send DM to {player.mention}.")
+
+        await ctx.send("Characters have been assigned and dms have been sent to players. Use `!check` to see your role.")
     else:
         await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
 
@@ -123,25 +130,33 @@ async def check(ctx):
             player = game.players[ctx.author.id]
 
             if player.character:
-                embed = discord.Embed(
-                    title=f"You are a {player.character.role}",
-                    description=f"{player.__str__()}",
-                    color=discord.Color.blue() if player.character.personality == "good" else discord.Color.red()
-                )
-
-                embed.add_field(name="Ability", value=player.character.ability, inline=True)
-
-                embed.set_thumbnail(url=f"attachment://{os.path.basename(player.character.pic)}")  # fallback if file not found
-
-                file = discord.File(player.character.pic, filename=f"{os.path.basename(player.character.pic)}")
-
-                await ctx.reply(embed=embed, file=file, ephemeral=True)
+                try:
+                    embed, file = create_embed(player)
+                    await player.user.send(embed=embed, file=file)
+                except Exception:
+                    await ctx.send(f"Could not send DM to {player.mention}.")
             else:
                 await ctx.reply("The game has not started yet. Please wait until the game starts.", ephemeral=True)
         else:
             await ctx.reply("You are not part of the current game.", ephemeral=True)
     else:
         await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
+
+
+def create_embed(player):
+    embed = discord.Embed(
+        title=f"You are a {player.character.role}",
+        description=f"{player.__str__()}",
+        color=discord.Color.blue() if player.character.personality == "good" else discord.Color.red()
+    )
+
+    embed.add_field(name="Ability", value=player.character.ability, inline=True)
+
+    embed.set_thumbnail(url=f"attachment://{os.path.basename(player.character.pic)}")
+
+    file = discord.File(player.character.pic, filename=f"{os.path.basename(player.character.pic)}")
+
+    return embed, file
 
 
 @bot.command()
