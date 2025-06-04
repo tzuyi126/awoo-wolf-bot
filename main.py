@@ -79,7 +79,15 @@ async def list(ctx):
         game = bot.active_game_channels[ctx.channel.id]
 
         if game.num_players > 0:
-            await ctx.reply(f"A total of `{game.num_players}` player(s) in the game:\n {"\n".join([player.mention for player in game.players.values()])}")
+            msg = (
+                f"A total of `{game.num_players}` player(s) in the game:\n"
+                f"{chr(10).join([player.mention for player in game.players.values()])}"
+            )
+
+            if game.roles:
+                msg += f"\nRoles for this game: {', '.join(game.roles)}"
+
+            await ctx.reply(msg)
         else:
             await ctx.reply("No players have joined the game yet.")
     else:

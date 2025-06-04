@@ -24,3 +24,17 @@ class Witch(Character):
 class Hunter(Character):
     def __init__(self):
         super().__init__("Hunter", "good", "If you're either killed by the wolves or executed by the villagers, you can take one player down with you.", "./pic/hunter-icon.png")
+
+def get_character_by_name(name):
+    characters = {
+        "Villager": Villager(),
+        "Werewolf": Werewolf(),
+        "Seer": Seer(),
+        "Witch": Witch(),
+        "Hunter": Hunter()
+    }
+    
+    if name not in characters:
+        raise ValueError(f"Character '{name}' does not exist.")
+    
+    return characters[name]

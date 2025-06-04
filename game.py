@@ -1,10 +1,13 @@
-import sys
-from models.Character import Villager, Werewolf, Seer, Witch
+from models.Character import get_character_by_name
 from models.Player import Player, User
 import uuid
 import random
 import os
 import json
+
+
+roles_env = os.getenv("GAME_ROLES")
+
 
 class Game:
     def __init__(self, channel_id):
@@ -14,7 +17,9 @@ class Game:
         self.num_players = 0
 
         self.game_state = "starting"  # Possible states: starting, day, night, finished
+        self.roles = []
     
+
     def add_player(self, player):
         if not self.game_state == "starting" or self.num_players >= 12:
             return False
@@ -26,6 +31,7 @@ class Game:
             return True
         else:
             return False
+
 
     def check_start_conditions(self):
         if not self.game_state == "starting":
@@ -40,6 +46,7 @@ class Game:
         
         return True
 
+
     def start(self):
         print(f"Starting game {self.id}. There are {self.num_players} players.")
 
@@ -47,25 +54,17 @@ class Game:
 
         self.game_state = "night"
 
+
     def assign_characters(self):
         # Try to read roles from env
-        roles_env = os.getenv("GAME_ROLES")
         roles_dict = json.loads(roles_env)
-        roles = roles_dict.get(str(self.num_players))
+        self.roles = roles_dict.get(str(self.num_players))
 
-        roles = roles.copy()  # Avoid modifying the original list
+        roles = self.roles.copy()  # Avoid modifying the original list
         random.shuffle(roles)
 
         for player in self.players.values():
             if not roles:
                 break
             role = roles.pop()
-
-            if role == "Villager":
-                player.set_character(Villager())
-            elif role == "Werewolf":
-                player.set_character(Werewolf())
-            elif role == "Seer":
-                player.set_character(Seer())
-            elif role == "Witch":
-                player.set_character(Witch())
+            player.set_character(get_character_by_name(role))
