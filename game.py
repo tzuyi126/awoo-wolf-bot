@@ -21,6 +21,7 @@ class Game:
 
         self.game_state = "starting"  # Possible states: starting, day, night, finished
         self.roles = []
+        self.wolves = set()
     
 
     def add_player(self, player):
@@ -50,6 +51,22 @@ class Game:
         return True
 
 
+    def check_end_conditions(self):
+        if self.game_state == "finished":
+            return True
+
+        # Check if all wolves are dead or all villagers are dead or all gods are dead
+        wolves_alive = any(player.is_wolf and player.is_alive for player in self.players.values())
+        villagers_alive = any(not player.is_wolf and player.is_alive for player in self.players.values())
+        gods_alive = any(player.is_god and player.is_alive for player in self.players.values())
+
+        if not wolves_alive or not villagers_alive or not gods_alive:
+            self.game_state = "finished"
+            return True
+
+        return False
+
+
     def start(self):
         print(f"Starting game {self.id}. There are {self.num_players} players.")
 
@@ -71,3 +88,6 @@ class Game:
                 break
             role = roles.pop()
             player.set_character(get_character_by_name(role))
+
+            if role == "Werewolf":
+                self.wolves.add(player.name)
