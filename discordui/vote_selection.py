@@ -19,7 +19,9 @@ class ActionView(discord.ui.View):
 
     class PlayerButton(discord.ui.Button):
         def __init__(self, player):
-            super().__init__(label=player.user.name, style=discord.ButtonStyle.secondary)
+            super().__init__(
+                label=player.user.name, style=discord.ButtonStyle.secondary
+            )
             self.player = player
 
         async def callback(self, interaction: discord.Interaction):
@@ -33,9 +35,13 @@ class ActionView(discord.ui.View):
 
                 for result_recipient in view.result_recipients:
                     try:
-                        await result_recipient.user.send(f"{view.decision_maker.user.name} has withdrawn their vote.")
+                        await result_recipient.user.send(
+                            f"{view.decision_maker.user.name} has withdrawn their vote."
+                        )
                     except Exception:
-                        await interaction.channel.send(f"Failed to notify {result_recipient.user.name} about the vote withdrawal.")
+                        await interaction.channel.send(
+                            f"Failed to notify {result_recipient.user.name} about the vote withdrawal."
+                        )
                 return
 
             # Reset all buttons to secondary style
@@ -51,6 +57,10 @@ class ActionView(discord.ui.View):
 
             for result_recipient in view.result_recipients:
                 try:
-                    await result_recipient.user.send(f"{view.decision_maker.user.name} has voted {self.player.user.name}.")
+                    await result_recipient.user.send(
+                        f"{view.decision_maker.user.name} has voted {self.player.user.name}."
+                    )
                 except Exception:
-                    await interaction.channel.send(f"Failed to notify {result_recipient.user.name} about the vote.")
+                    await interaction.channel.send(
+                        f"Failed to notify {result_recipient.user.name} about the vote."
+                    )

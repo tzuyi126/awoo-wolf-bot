@@ -35,7 +35,11 @@ def create_player_role_embed(player, wolves):
     embed = discord.Embed(
         title=f"You are a {player.character.role}",
         description=f"{player.__str__()}",
-        color=discord.Color.blue() if player.character.personality == "good" else discord.Color.red()
+        color=(
+            discord.Color.blue()
+            if player.character.personality == "good"
+            else discord.Color.red()
+        ),
     )
 
     embed.add_field(name="Ability", value=player.character.ability, inline=False)
@@ -43,9 +47,15 @@ def create_player_role_embed(player, wolves):
     embed.set_thumbnail(url=f"attachment://{os.path.basename(player.character.pic)}")
 
     if player.is_wolf:
-        embed.add_field(name="The Wolf Pack (Only the wolves know!)", value=", ".join([wolf for wolf in wolves]), inline=False)
+        embed.add_field(
+            name="The Wolf Pack (Only the wolves know!)",
+            value=", ".join([wolf for wolf in wolves]),
+            inline=False,
+        )
 
-    file = discord.File(player.character.pic, filename=f"{os.path.basename(player.character.pic)}")
+    file = discord.File(
+        player.character.pic, filename=f"{os.path.basename(player.character.pic)}"
+    )
 
     return embed, file
 
@@ -57,13 +67,17 @@ async def check_game_over(bot, channel, game):
         embed = discord.Embed(
             title=f"The {winner} wins!",
             description=f"Congratulations! The {winner} team has won the game!",
-            color=discord.Color.green() if winner.lower() == "good" else discord.Color.red()
+            color=(
+                discord.Color.green()
+                if winner.lower() == "good"
+                else discord.Color.red()
+            ),
         )
-        
+
         await channel.send(embed=embed)
 
         del bot.active_game_channels[channel.id]
         await channel.send("The game has ended. Thanks for playing!")
         return True
-    
+
     return False

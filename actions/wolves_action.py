@@ -15,9 +15,9 @@ async def send_wolf_vote_dm(alive_players, wolf, alive_wolves):
     embed = discord.Embed(
         title="Choose a player to eliminate:",
         description=f"You have **{envConfig.ACTION_TIMEOUT_SEC}** seconds to vote.",
-        color=discord.Color.dark_red()
+        color=discord.Color.dark_red(),
     )
-    
+
     message = await wolf.user.send(embed=embed, view=view)
 
     for remaining in range(envConfig.ACTION_TIMEOUT_SEC - 1, -1, -1):
@@ -33,13 +33,19 @@ async def send_wolf_vote_dm(alive_players, wolf, alive_wolves):
 
 
 async def hunt(interaction, game):
-    await interaction.channel.send("🐺 The wolves are gathering to decide their victim...")
+    await interaction.channel.send(
+        "🐺 The wolves are gathering to decide their victim..."
+    )
 
-    alive_wolves = [player for player in game.players.values() if player.is_wolf and player.is_alive]
+    alive_wolves = [
+        player for player in game.players.values() if player.is_wolf and player.is_alive
+    ]
     alive_players = [player for player in game.players.values() if player.is_alive]
 
     vote_tasks = {
-        wolf.user.id: asyncio.create_task(send_wolf_vote_dm(alive_players, wolf, alive_wolves))
+        wolf.user.id: asyncio.create_task(
+            send_wolf_vote_dm(alive_players, wolf, alive_wolves)
+        )
         for wolf in alive_wolves
     }
 
@@ -64,7 +70,9 @@ async def hunt(interaction, game):
     if night_votes:
         vote_counts = Counter(night_votes.values())
         max_votes = max(vote_counts.values())
-        candidates = [player_id for player_id, count in vote_counts.items() if count == max_votes]
+        candidates = [
+            player_id for player_id, count in vote_counts.items() if count == max_votes
+        ]
 
         if candidates:
             if len(candidates) > 1:
@@ -74,7 +82,9 @@ async def hunt(interaction, game):
             else:
                 target_id = candidates[0]
                 target = game.players.get(target_id)
-                msg = f"You have chosen your victim: {target.user.name} has been killed!"
+                msg = (
+                    f"You have chosen your victim: {target.user.name} has been killed!"
+                )
 
             target.kill()
 
@@ -88,6 +98,8 @@ async def hunt(interaction, game):
 
         return target
     else:
-        await interaction.channel.send("🐺 The wolves failed to agree on a victim tonight.")
+        await interaction.channel.send(
+            "🐺 The wolves failed to agree on a victim tonight."
+        )
 
     return None

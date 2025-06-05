@@ -9,6 +9,7 @@ from load_env_var import EnvConfig
 # Load roles from environment variable
 envConfig = EnvConfig()
 
+
 class State:
     STARTING = "starting"
     DAY = "day"
@@ -43,12 +44,14 @@ class Game:
         self.game_state = GameState()
         self.roles = []
         self.wolves = set()
-    
 
     def add_player(self, player):
-        if not self.game_state.get_state() == State.STARTING or self.num_players >= envConfig.MAX_PLAYERS:
+        if (
+            not self.game_state.get_state() == State.STARTING
+            or self.num_players >= envConfig.MAX_PLAYERS
+        ):
             return False
-        
+
         if player.id not in self.players:
             self.players[player.id] = Player(player)
             self.num_players += 1
@@ -57,23 +60,21 @@ class Game:
         else:
             return False
 
-
     def check_start_conditions(self):
         if not self.game_state.get_state() == State.STARTING:
             return False
 
-        '''if not envConfig.MIN_PLAYERS <= self.num_players <= envConfig.MAX_PLAYERS:
-            return False'''
-        
-        ''' TEST CONDITION '''
+        """if not envConfig.MIN_PLAYERS <= self.num_players <= envConfig.MAX_PLAYERS:
+            return False"""
+
+        """ TEST CONDITION """
         while self.num_players < envConfig.MIN_PLAYERS:
             i = self.num_players
             u = User(id=str(i), name=f"Player{i}", mention=f"<@{i}>")
             self.add_player(u)  # Simulate players for testing
-        ''' TEST CONDITION '''
-        
-        return True
+        """ TEST CONDITION """
 
+        return True
 
     def check_end_conditions(self):
         if self.game_state.get_state() == State.STARTING:
@@ -86,7 +87,7 @@ class Game:
         gods_alive = self.check_if_gods_alive()
 
         if self.num_players <= 5:
-        # For small games (<=5), wolves win if villagers and gods are all dead
+            # For small games (<=5), wolves win if villagers and gods are all dead
             if not villagers_alive and not gods_alive:
                 self.game_state.set_finished()
                 self.winner = "EVIL"
@@ -96,7 +97,7 @@ class Game:
                 self.winner = "GOOD"
                 return True
         else:
-        # For larger games (>5), wolves win if villagers or gods are all dead
+            # For larger games (>5), wolves win if villagers or gods are all dead
             if not villagers_alive or not gods_alive:
                 self.game_state.set_finished()
                 self.winner = "EVIL"
@@ -108,32 +109,31 @@ class Game:
 
         return False
 
-
     def get_winner(self):
         if self.game_state.get_state() != State.FINISHED:
             self.check_end_conditions()
         return getattr(self, "winner", None)
 
-
     def check_if_wolves_alive(self):
-        return any(player.is_wolf and player.is_alive for player in self.players.values())
-    
+        return any(
+            player.is_wolf and player.is_alive for player in self.players.values()
+        )
 
     def check_if_villagers_alive(self):
-        return any(not player.is_wolf and player.is_alive for player in self.players.values())
-    
+        return any(
+            not player.is_wolf and player.is_alive for player in self.players.values()
+        )
 
     def check_if_gods_alive(self):
-        return any(player.is_god and player.is_alive for player in self.players.values())
-
+        return any(
+            player.is_god and player.is_alive for player in self.players.values()
+        )
 
     def is_day(self):
         return self.game_state.get_state() == State.DAY
 
-
     def is_night(self):
         return self.game_state.get_state() == State.NIGHT
-
 
     def start(self):
         print(f"Starting game {self.id}. There are {self.num_players} players.")
@@ -141,7 +141,6 @@ class Game:
         self.assign_characters()
 
         self.game_state.set_day()
-
 
     def assign_characters(self):
         # Try to read roles from env
@@ -159,7 +158,6 @@ class Game:
 
             if role == "Werewolf":
                 self.wolves.add(player.user.name)
-
 
     def kill_player(self, player_id):
         if player_id in self.players:
