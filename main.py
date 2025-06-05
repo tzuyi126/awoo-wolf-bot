@@ -4,6 +4,7 @@ import logging
 from dotenv import load_dotenv
 import os
 from collections import Counter
+import actions.wolves_action
 
 from game import Game
 
@@ -34,65 +35,125 @@ async def on_message(message):
 
 @bot.command()
 async def awoo(ctx):
-    await ctx.send(
-        "AWOOOOO!\n"
-        "Welcome to the AWOO WEREWOLF game on Discord! \n"
-        "Type `!commands` to see what you can do.\n"
-        "This bot is developed by tzuyi126.\n"
-        "Thanks for playing!\n"
-    )
+    messages = [
+        "AWOOOOO!",
+        "Welcome!",
+        "I'm Awoo, your Werewolf game master.",
+        "This is a werewolf game on Discord!",
+        "Type `!commands` to see what you can do.",
+        "Thanks for playing!"
+    ]
+
+    for msg in messages:
+        await ctx.send(msg)
 
 
 @bot.command()
 async def commands(ctx):
     help_text = (
-        "AWOOOOO! Welcome! Here are the commands you can use:\n"
+        "AWOOOOO!\n"
+        "Here are the commands you can use:\n"
         "`!new` - Start a new game.\n"
-        "`!join` - Join the current game.\n"
         "`!list` - List all players and all roles in the current game.\n"
-        f"`!start` - Start the game if enough players have joined (at least {os.getenv('MIN_PLAYERS')}, at most {os.getenv('MAX_PLAYERS')}).\n"
-        "`!check` - Check your role in the game.\n"
+        "`!check` - Check your role in the game.\nAwoo wolf will send you a DM with your role and abilities.\n"
         "`!end` - End the current game.\n"
     )
     await ctx.send(help_text)
 
 
-def check_if_game_exists(ctx):
-    return hasattr(bot, "active_game_channels") and ctx.channel.id in bot.active_game_channels.keys()
+def check_if_game_exists(channel_id):
+    return hasattr(bot, "active_game_channels") and channel_id in bot.active_game_channels.keys()
 
 
 @bot.command()
 async def new(ctx):
     # Prevent multiple games in the same channel
-    if check_if_game_exists(ctx):
+    if check_if_game_exists(ctx.channel.id):
         await ctx.reply("A game is already being set up in this channel.")
         return
-    
+
     if not hasattr(bot, "active_game_channels"):
         bot.active_game_channels = {}
 
     bot.active_game_channels[ctx.channel.id] = Game(ctx.channel.id)
-    await ctx.reply("New game is created! Type `!join` to join the game.")
+
+    embed = discord.Embed(
+        title="AWOO WEREWOLF - New Game Created!",
+        description="A new game has been created!\nCome join the deception and mystery. Can you survive the night?",
+        color=discord.Color.red()
+    )
+
+    view = JoinGameButton(bot, ctx.channel.id)
+    view.add_item(StartGameButton(bot, ctx.channel.id).children[0])
+
+    await ctx.send(embed=embed, view=view)
 
 
-@bot.command()
-async def join(ctx):
-    if not check_if_game_exists(ctx):
-        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
-        return
-    
-    game = bot.active_game_channels[ctx.channel.id]
+class JoinGameButton(discord.ui.View):
+    def __init__(self, bot, channel_id):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.channel_id = channel_id
 
-    if not game.add_player(ctx.author):
-        await ctx.reply(f"{ctx.author.mention}, you cannot join the game at this moment!")
-        return
+    @discord.ui.button(label="Join Game", style=discord.ButtonStyle.primary, custom_id="join_game_button", emoji="🤝")
+    async def join_game(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not check_if_game_exists(interaction.channel.id):
+            button.disabled = True
+            await interaction.response.edit_message(view=self)
+            await interaction.followup.send("No game is currently active in this channel.", ephemeral=True)
+            return
 
-    await ctx.reply(f"{ctx.author.mention} has joined the game! Current players: `{game.num_players}`")
+        game = self.bot.active_game_channels[self.channel_id]
+        user = interaction.user
+
+        if not game.add_player(user):
+            await interaction.response.send_message(f"{user.mention}, you cannot (re)join the game at this moment!", ephemeral=True)
+            return
+
+        await interaction.response.send_message(f"{user.mention} has joined the game! Current players: `{game.num_players}`", ephemeral=False)
+
+
+class StartGameButton(discord.ui.View):
+    def __init__(self, bot, channel_id):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.channel_id = channel_id
+
+    @discord.ui.button(label="Start Game", style=discord.ButtonStyle.success, custom_id="start_game_button", emoji="🚀")
+    async def start_game(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not check_if_game_exists(interaction.channel.id):
+            button.disabled = True
+            await interaction.response.edit_message(view=self)
+            await interaction.followup.send("No game is currently active in this channel. Use `!new` to create a new game.", ephemeral=True)
+            return
+
+        game = self.bot.active_game_channels[self.channel_id]
+
+        if not game.check_start_conditions():
+            await interaction.response.send_message(
+                f"Cannot start the game. Either the game is already in progress or the number of players is not sufficient (at least {os.getenv('MIN_PLAYERS')}, at most {os.getenv('MAX_PLAYERS')}).",
+                ephemeral=False
+            )
+            return
+
+        button.disabled = True
+        await interaction.response.edit_message(view=self)
+        await interaction.followup.send("The game is starting! Prepare yourselves!", ephemeral=False)
+        game.start()
+
+        for player in game.players.values():
+            await dm_player_role(interaction.channel, player, game.wolves)
+
+        await interaction.channel.send(
+            "💡 Suggestion: You can mute your mic during the night to avoid spoilers.\n"
+            "⬇️ Whenever you are ready, press the button below to start the night.",
+            view=NightButton()
+        )
 
 
 @bot.command()
 async def list(ctx):
-    if not check_if_game_exists(ctx):
+    if not check_if_game_exists(ctx.channel.id):
         await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
         return
     
@@ -114,34 +175,46 @@ async def list(ctx):
         await ctx.reply("No players have joined the game yet.")
 
 
-@bot.command()
-async def start(ctx):
-    if not check_if_game_exists(ctx):
-        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
+class NightButton(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="The night has fallen.", style=discord.ButtonStyle.danger, custom_id="start_night_phase", emoji="🌑")
+    async def start_night(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not check_if_game_exists(interaction.channel.id):
+            button.disabled = True
+            await interaction.response.edit_message(view=self)
+            await interaction.followup.send("No game is currently active in this channel.", ephemeral=True)
+            return
+
+        game = bot.active_game_channels[interaction.channel.id]
+
+        if not game.is_day():
+            await interaction.response.send_message("Patience. It's not yet time for nightfall.", ephemeral=True)
+            return
+
+        button.disabled = True
+        await interaction.response.edit_message(view=self)
+
+        await start_night_phase(interaction, game)
+
+
+async def start_night_phase(interaction, game):
+    if await check_game_over(interaction.channel, game):
         return
-    
-    game = bot.active_game_channels[ctx.channel.id]
 
-    if not game.check_start_conditions():
-        await ctx.reply("Cannot start the game. Either the game is already in progress or the number of players is not sufficient.")
+    game.game_state.set_night()
+    await interaction.channel.send("AWOOOOO! The night has fallen!")
+
+    victim = await actions.wolves_action.hunt(interaction, game)
+
+    if await check_game_over(interaction.channel, game):
         return
-
-    await ctx.send("AWOOOOO! The game is starting! Prepare yourselves!")
-    game.start()
-
-    for player in game.players.values():
-        try:
-            embed, file = create_embed(player, game.wolves)
-            await player.user.send(embed=embed, file=file)
-        except Exception:
-            await ctx.send(f"Could not send DM to {player.mention}.")
-
-    await ctx.send("Characters have been assigned and dms have been sent to players. Use `!check` to see your role.")
 
 
 @bot.command()
 async def check(ctx):
-    if not check_if_game_exists(ctx):
+    if not check_if_game_exists(ctx.channel.id):
         await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
         return
     
@@ -151,18 +224,22 @@ async def check(ctx):
         player = game.players[ctx.author.id]
 
         if player.character:
-            try:
-                embed, file = create_embed(player, game.wolves)
-                await player.user.send(embed=embed, file=file)
-            except Exception:
-                await ctx.send(f"Could not send DM to {player.mention}.")
+            await dm_player_role(ctx, player, game.wolves)
         else:
-            await ctx.reply("The game has not started yet. Please wait until the game starts.", ephemeral=True)
+            await ctx.reply("The game has not started yet. Please wait until the game starts.")
     else:
-        await ctx.reply("You are not part of the current game.", ephemeral=True)
+        await ctx.reply("You are not part of the current game.")
 
 
-def create_embed(player, wolves):
+async def dm_player_role(channel, player, wolves):
+    try:
+        embed, file = create_player_role_embed(player, wolves)
+        await player.user.send(embed=embed, file=file)
+    except Exception:
+        await channel.send(f"❌ Could not send DM to {player.mention}.")
+
+
+def create_player_role_embed(player, wolves):
     embed = discord.Embed(
         title=f"You are a {player.character.role}",
         description=f"{player.__str__()}",
@@ -181,27 +258,39 @@ def create_embed(player, wolves):
     return embed, file
 
 
-@bot.command()
-async def night(ctx):
-    if not check_if_game_exists(ctx):
-        await ctx.reply("No game is currently active in this channel. Use `!new` to create a new game.")
-        return
-    game = bot.active_game_channels[ctx.channel.id]
+async def check_game_over(channel, game):
+    if game.check_end_conditions():
+        winner = game.get_winner()
 
-    if game.game_state != "night":
-        await ctx.reply("It is not currently night time. Please wait until the night phase starts.")
-        return
+        if winner == "DRAW":
+            embed = discord.Embed(
+                title="No one wins",
+                description="The game has ended in a draw.",
+                color=discord.Color.greyple()
+            )
+        else:
+            embed = discord.Embed(
+                title=f"The {winner} wins!",
+                description=f"Congratulations! The {winner} team has won the game!",
+                color=discord.Color.green() if winner.lower() == "good" else discord.Color.red()
+            )
+        
+        await channel.send(embed=embed)
 
-    # Here you would implement the logic for the night phase
-    await ctx.reply("Night phase has started! Wolves, discuss and choose a player to eliminate.")
+        del bot.active_game_channels[channel.id]
+        await channel.send("The game has ended. Thanks for playing!")
+        return True
+    
+    return False
 
 
 @bot.command()
 async def end(ctx):
-    if not check_if_game_exists(ctx):
+    if not check_if_game_exists(ctx.channel.id):
         await ctx.reply("No game is currently active in this channel.")
         return
     
+    await check_game_over(ctx.channel, bot.active_game_channels[ctx.channel.id])
     del bot.active_game_channels[ctx.channel.id]
     await ctx.reply("The game has ended.")
 

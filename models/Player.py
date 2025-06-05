@@ -25,3 +25,6 @@ class Player:
         self.character = character
         self.is_wolf = (character.role == "Werewolf")
         self.is_god = (character.role in ["Seer", "Witch", "Hunter"])
+
+    def kill(self):
+        self.is_alive = False
