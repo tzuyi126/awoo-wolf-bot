@@ -1,16 +1,13 @@
-from models.Character import get_character_by_name
-from models.Player import Player, User
 import uuid
 import random
-from dotenv import load_dotenv
 import json
-import os
 
-load_dotenv(override=True)
-min_players = int(os.getenv("MIN_PLAYERS"))
-max_players = int(os.getenv("MAX_PLAYERS"))
-roles_env = os.getenv("GAME_ROLES")
+from models.Character import get_character_by_name
+from models.Player import Player, User
+from load_env_var import EnvConfig
 
+# Load roles from environment variable
+envConfig = EnvConfig()
 
 class State:
     STARTING = "starting"
@@ -49,7 +46,7 @@ class Game:
     
 
     def add_player(self, player):
-        if not self.game_state.get_state() == State.STARTING or self.num_players >= max_players:
+        if not self.game_state.get_state() == State.STARTING or self.num_players >= envConfig.MAX_PLAYERS:
             return False
         
         if player.id not in self.players:
@@ -65,18 +62,23 @@ class Game:
         if not self.game_state.get_state() == State.STARTING:
             return False
 
-        '''if not min_players <= self.num_players <= max_players:
+        '''if not envConfig.MIN_PLAYERS <= self.num_players <= envConfig.MAX_PLAYERS:
             return False'''
-        while self.num_players < min_players:
+        
+        ''' TEST CONDITION '''
+        while self.num_players < envConfig.MIN_PLAYERS:
             i = self.num_players
             u = User(id=str(i), name=f"Player{i}", mention=f"<@{i}>")
-            self.add_player(Player(u))  # Simulate players for testing
+            self.add_player(u)  # Simulate players for testing
+        ''' TEST CONDITION '''
         
         return True
 
 
     def check_end_conditions(self):
-        if self.game_state.get_state() == State.FINISHED:
+        if self.game_state.get_state() == State.STARTING:
+            return False
+        elif self.game_state.get_state() == State.FINISHED:
             return True
 
         wolves_alive = self.check_if_wolves_alive()
@@ -143,7 +145,7 @@ class Game:
 
     def assign_characters(self):
         # Try to read roles from env
-        roles_dict = json.loads(roles_env)
+        roles_dict = json.loads(envConfig.GAME_ROLES)
         self.roles = roles_dict.get(str(self.num_players))
 
         roles = self.roles.copy()  # Avoid modifying the original list
@@ -156,7 +158,7 @@ class Game:
             player.set_character(get_character_by_name(role))
 
             if role == "Werewolf":
-                self.wolves.add(player.name)
+                self.wolves.add(player.user.name)
 
 
     def kill_player(self, player_id):
@@ -164,7 +166,7 @@ class Game:
             player = self.players[player_id]
             player.kill()
 
-            print(f"Player {player.name} has been killed.")
+            print(f"Player {player.user.name} has been killed.")
             return True
         else:
             print(f"Player with ID {player_id} does not exist.")

@@ -22,6 +22,23 @@ class Witch(Character):
     def __init__(self):
         super().__init__("Witch", "good", "Use your potions wisely to protect the villagers or eliminate wolves.", "You have two potions - one to heal and one to kill. You can use either one during the night.", "./pic/witch-icon.png")
 
+        self.heal_potion = True
+        self.kill_potion = True
+
+    def heal(self, target):
+        if self.heal_potion:
+            self.heal_potion = False
+            target.heal()
+            return True
+        return False
+
+    def kill(self, target):
+        if self.kill_potion:
+            self.kill_potion = False
+            target.kill()
+            return True
+        return False
+
 class Hunter(Character):
     def __init__(self):
         super().__init__("Hunter", "good", "Help the villagers kill the wolves.", "If you're either killed by the wolves or executed by the villagers, you can take one player down with you.", "./pic/hunter-icon.png")

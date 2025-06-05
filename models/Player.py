@@ -9,9 +9,6 @@ class User:
 class Player:
     def __init__(self, user):
         self.user = user
-        self.id = user.id
-        self.name = user.name
-        self.mention = user.mention
 
         self.character = None  # Will be set when the game starts
         self.is_alive = True
@@ -28,3 +25,6 @@ class Player:
 
     def kill(self):
         self.is_alive = False
+    
+    def heal(self):
+        self.is_alive = True
