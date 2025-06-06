@@ -64,15 +64,8 @@ class Game:
         if not self.game_state.get_state() == State.STARTING:
             return False
 
-        """if not envConfig.MIN_PLAYERS <= self.num_players <= envConfig.MAX_PLAYERS:
-            return False"""
-
-        """ TEST CONDITION """
-        while self.num_players < envConfig.MIN_PLAYERS:
-            i = self.num_players
-            u = User(id=str(i), name=f"Player{i}", mention=f"<@{i}>")
-            self.add_player(u)  # Simulate players for testing
-        """ TEST CONDITION """
+        if not envConfig.MIN_PLAYERS <= self.num_players <= envConfig.MAX_PLAYERS:
+            return False
 
         return True
 
@@ -86,8 +79,8 @@ class Game:
         villagers_alive = self.check_if_villagers_alive()
         gods_alive = self.check_if_gods_alive()
 
-        if self.num_players <= 5:
-            # For small games (<=5), wolves win if villagers and gods are all dead
+        if self.num_players <= 8:
+            # For small games (<=8), wolves win if villagers and gods are all dead
             if not villagers_alive and not gods_alive:
                 self.game_state.set_finished()
                 self.winner = "EVIL"
@@ -97,7 +90,7 @@ class Game:
                 self.winner = "GOOD"
                 return True
         else:
-            # For larger games (>5), wolves win if villagers or gods are all dead
+            # For larger games (>8), wolves win if villagers or gods are all dead
             if not villagers_alive or not gods_alive:
                 self.game_state.set_finished()
                 self.winner = "EVIL"
