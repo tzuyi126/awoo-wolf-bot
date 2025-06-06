@@ -155,7 +155,62 @@ async def night(ctx):
         await ctx.reply("Patience. It's not yet time for nightfall.")
         return
 
+    if await check_game_over(bot, ctx.channel, game):
+        return
+    
     await flow_action.start_night_phase(bot, ctx, game)
+
+    if await check_game_over(bot, ctx.channel, game):
+        return
+    
+    await ctx.send(
+        "⚔️ Discuss with the living, and use `!kill <player_name>` to conduct an execution.\n"
+        "🌙 When ready, type `!night` to start the next night."
+    )
+
+
+@bot.command()
+async def kill(ctx, *, player_name: str = None):
+    if not check_if_game_exists(bot, ctx.channel.id):
+        await ctx.reply(
+            "No game is currently active in this channel. Use `!new` to create a new game."
+        )
+        return
+
+    game = bot.active_game_channels[ctx.channel.id]
+
+    if not game.is_day():
+        await ctx.reply("Patience, it's not yet time for the execution.")
+        return
+
+    if not player_name:
+        await ctx.reply("Please specify a player to execute. Usage: `!kill <player_name>`")
+        return
+
+    # Try to find the player by display name or username (case-insensitive)
+    target_player = None
+    for player in game.players.values():
+        if (
+            player.user.display_name.lower() == player_name.lower()
+            or player.user.name.lower() == player_name.lower()
+        ):
+            target_player = player
+            break
+
+    if not target_player:
+        await ctx.reply(f"Could not find a player named `{player_name}` in the game.")
+        return
+
+    if not target_player.is_alive:
+        await ctx.reply(f"{target_player.user.mention} is already dead.")
+        return
+
+    # Mark the player as executed
+    game.kill_player(target_player.user.id)
+
+    await ctx.send(f"⚔️ {target_player.user.mention} has been executed by the village!")
+
+    await check_game_over(bot, ctx.channel, bot.active_game_channels[ctx.channel.id])
 
 
 @bot.command()

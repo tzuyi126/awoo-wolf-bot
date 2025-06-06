@@ -1,26 +1,29 @@
 
-from methods import check_game_over
-
 from . import wolves_action, seer_action, witch_action
 
 async def start_night_phase(bot, ctx, game):
-    if await check_game_over(bot, ctx.channel, game):
-        return
-
     game.game_state.set_night()
-    await ctx.send("AWOOOOO! The night has fallen!")
+    await ctx.send("🌕 AWOOOOO! The night has fallen!")
 
-    victim = await wolves_action.hunt(ctx, game)
+    wolves_target = await wolves_action.hunt(ctx, game)
 
     await seer_action.check(ctx, game)
 
-    target = await witch_action.heal_or_kill(ctx, game, victim)
+    witch_target = await witch_action.heal_or_kill(ctx, game, wolves_target)
 
-    if target == victim:
-        # The victim got healed by the witch
-        victim = target = None
+    await ctx.send("🌞 Dawn breaks!")
 
-    await ctx.send("🌞 The day has dawned!")
+    if (not wolves_target and not witch_target) or wolves_target == witch_target:
+        await ctx.send("The village awakens to a peaceful morning. **No one** was lost in the night.")
+    else:
+        victims = [v for v in [wolves_target, witch_target] if v is not None]
+        
+        for victim in victims:
+            game.kill_player(victim.user.id)
 
+        victim_names = "** and **".join(sorted([victim.user.display_name for victim in victims]))
+        await ctx.send(f"As the sun rises, the villagers gather and discover that **{victim_names}** got killed during the night.")
+
+    game.game_state.set_day()
 
     

@@ -50,20 +50,20 @@ class Witch(Character):
             "./pic/witch-icon.png",
         )
 
-        self.heal_potion = True
-        self.kill_potion = True
+        self.heal_potion = 1
+        self.kill_potion = 1
 
     def can_heal(self):
-        return self.heal_potion
+        return self.heal_potion == 1
 
     def can_kill(self):
-        return self.kill_potion
+        return self.kill_potion == 1
 
     def heal(self):
-        self.heal_potion = False
+        self.heal_potion = 0
 
     def kill(self):
-        self.kill_potion = False
+        self.kill_potion = 0
 
 
 class Hunter(Character):

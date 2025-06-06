@@ -27,6 +27,8 @@ async def heal_or_kill(ctx, game, victim):
     else:
         title = "No one has been killed. Choose a player to poison:"
 
+    title += f"\nYou have {witch.character.heal_potion} healing potion and {witch.character.kill_potion} poison left."
+
     embed = discord.Embed(
         title=title,
         description=f"You have **{envConfig.ACTION_TIMEOUT_SEC}** seconds to take action.",
@@ -35,16 +37,23 @@ async def heal_or_kill(ctx, game, victim):
 
     target_id = await send_dm_action(alive_players, witch, [], embed)
 
-    if target_id:
-        target = game.players.get(target_id)
-
-        if target == victim:
-            await witch.user.send(f"You healed {target.user.display_name}.")
-        else:
-            await witch.user.send(f"You poisoned {target.user.display_name}.")
-
     await ctx.channel.send(
         "🧪 The Witch has made a choice, and only for the good."
     )
 
-    return target if target_id else None
+    if target_id:
+        target = game.players.get(target_id)
+
+        if target == victim and witch.character.can_heal():
+            await witch.user.send(f"You healed {target.user.display_name}.")
+            witch.character.heal()
+            return target
+
+        if target != victim and witch.character.can_kill():
+            await witch.user.send(f"You poisoned {target.user.display_name}.")
+            witch.character.kill()
+            return target
+
+        await witch.user.send("You couldn't use a potion, probably because you're out of that type.")
+
+    return None

@@ -163,9 +163,6 @@ class Game:
         if player_id in self.players:
             player = self.players[player_id]
             player.kill()
-
-            print(f"Player {player.user.display_name} has been killed.")
             return True
-        else:
-            print(f"Player with ID {player_id} does not exist.")
-            return False
+        
+        return False
