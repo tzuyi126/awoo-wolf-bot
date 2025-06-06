@@ -12,7 +12,7 @@ async def check(ctx, game):
         return
 
     await ctx.channel.send(
-        "🔮 The Seer wakes at night and sees through the veil of secrets..."
+        "🔮 The Seer wakes at night and sees through the veil of secrets...", silent=True
     )
 
     seer = next(
@@ -35,10 +35,10 @@ async def check(ctx, game):
         target = game.players.get(target_id)
 
         if target.is_wolf():
-            await seer.user.send(f"{target.user.display_name} is a **Wolf**! 👎")
+            await seer.user.send(f"{target.user.display_name} is a **Wolf**! 👎", silent=True)
         else:
-            await seer.user.send(f"{target.user.display_name} is **not** a wolf. 👍")
+            await seer.user.send(f"{target.user.display_name} is **not** a wolf. 👍", silent=True)
 
     await ctx.channel.send(
-        "🔮 The Seer peers into the shadows and uncovers hidden truths about the chosen one."
+        "🔮 The Seer peers into the shadows and uncovers hidden truths about the chosen one.", silent=True
     )

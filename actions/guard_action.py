@@ -11,7 +11,7 @@ async def guard(ctx, game):
     if not check_if_role_exists(game, "Guard"):
         return None
 
-    await ctx.channel.send("🛡️ The Guard is choosing someone to protect tonight...")
+    await ctx.channel.send("🛡️ The Guard is choosing someone to protect tonight...", silent=True)
 
     guard = next(
         player for player in game.players.values() if player.character.role == "Guard"
@@ -32,7 +32,7 @@ async def guard(ctx, game):
     target_id = await send_dm_action(selectable_players, guard, [], embed)
 
     await ctx.channel.send(
-        "🛡️ The Guard has made the choice and will protect the one at all costs."
+        "🛡️ The Guard has made the choice and will protect the one at all costs.", silent=True
     )
 
     if target_id:
@@ -41,8 +41,8 @@ async def guard(ctx, game):
         # Store the last protected player to prevent consecutive protection
         guard.character.protect(target.user.id)
 
-        await guard.user.send(f"You are protecting {target.user.display_name} tonight.")
+        await guard.user.send(f"You are protecting {target.user.display_name} tonight.", silent=True)
         return target
 
-    await guard.user.send("You did not choose anyone to protect tonight.")
+    await guard.user.send("You did not choose anyone to protect tonight.", silent=True)
     return None

@@ -9,7 +9,6 @@ from methods import check_if_game_exists, dm_player_role, check_game_over
 from actions import flow_action
 from discordui.game_control import NewGameView
 
-# Load environment variables
 envConfig = EnvConfig()
 
 handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
@@ -37,17 +36,15 @@ async def on_message(message):
 
 @bot.command()
 async def awoo(ctx):
-    messages = [
-        "AWOOOOO!",
-        "Welcome!",
-        "I'm Awoo, your Werewolf game master.",
-        "This is a werewolf game on Discord!",
-        "Type `!commands` to see what you can do.",
-        "Thanks for playing!",
-    ]
+    intro = (
+        "AWOOOOO!\n"
+        "I'm Awoo, your Werewolf game master.\n"
+        "Get ready for a thrilling game of deception and deduction!\n"
+        "Type `!commands` to see all available commands.\n"
+        "Created by tzuyi126. Enjoy the game!"
+    )
 
-    for msg in messages:
-        await ctx.send(msg)
+    await ctx.send(intro)
 
 
 @bot.command()
@@ -62,12 +59,12 @@ async def commands(ctx):
         "`!kill <player_name>` - Execute a player during the day.\n"
         "`!end` - End the current game.\n"
     )
+    
     await ctx.send(help_text)
 
 
 @bot.command()
 async def new(ctx):
-    # Prevent multiple games in the same channel
     if check_if_game_exists(bot, ctx.channel.id):
         await ctx.reply("A game is already being set up in this channel.")
         return
@@ -208,7 +205,6 @@ async def kill(ctx, *, player_name: str = None):
         await ctx.reply(f"{target_player.user.mention} is already dead.")
         return
 
-    # Mark the player as executed
     game.kill_player(target_player.user.id)
 
     await ctx.send(f"⚔️ {target_player.user.mention} has been executed by the village!")

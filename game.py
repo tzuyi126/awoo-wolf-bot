@@ -6,7 +6,6 @@ from models.Character import get_character_by_name
 from models.Player import Player, User
 from load_env_var import EnvConfig
 
-# Load roles from environment variable
 envConfig = EnvConfig()
 
 
@@ -55,7 +54,6 @@ class Game:
         if player.id not in self.players:
             self.players[player.id] = Player(player)
             self.num_players += 1
-
             return True
         else:
             return False
@@ -90,7 +88,7 @@ class Game:
                 self.winner = "GOOD"
                 return True
         else:
-            # For larger games (>8), wolves win if villagers or gods are all dead
+            # For larger games (>8), wolves win if EITHER villagers or gods are all dead
             if not villagers_alive or not gods_alive:
                 self.game_state.set_finished()
                 self.winner = "EVIL"
@@ -137,7 +135,7 @@ class Game:
         self.game_state.set_day()
 
     def assign_characters(self):
-        # Try to read roles from env
+        # Read roles from env
         roles_dict = json.loads(envConfig.GAME_ROLES)
         self.roles = roles_dict.get(str(self.num_players))
 
