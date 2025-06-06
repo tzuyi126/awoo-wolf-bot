@@ -59,6 +59,7 @@ async def commands(ctx):
         "`!list` - List all players and all roles in the current game.\n"
         "`!check` - Check your role in the game. Awoo wolf will send you a DM with your role and abilities.\n"
         "`!night` - Start the night phase of the game.\n"
+        "`!kill <player_name>` - Execute a player during the day.\n"
         "`!end` - End the current game.\n"
     )
     await ctx.send(help_text)
@@ -158,7 +159,7 @@ async def night(ctx):
     if await check_game_over(bot, ctx.channel, game):
         return
 
-    await flow_action.start_night_phase(bot, ctx, game)
+    await flow_action.start_night_phase(ctx, game)
 
     if await check_game_over(bot, ctx.channel, game):
         return

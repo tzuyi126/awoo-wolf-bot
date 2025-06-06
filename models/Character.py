@@ -72,9 +72,28 @@ class Hunter(Character):
             "Hunter",
             "good",
             "Help the villagers kill the wolves.",
-            "If you're either killed by the wolves or executed by the villagers, you can take one player down with you.",
+            "If you're either killed by the wolves or executed by the villagers, you can take one down with you by using `!kill <player_name>`.",
             "./pic/hunter-icon.png",
         )
+
+
+class Guard(Character):
+    def __init__(self):
+        super().__init__(
+            "Guard",
+            "good",
+            "You can protect a player from being killed by the wolves each night. However, a witch's potion can override your protection.",
+            "Choose a player to guard each night, but you cannot protect the same player two nights in a row.",
+            "./pic/guard-icon.png",
+        )
+
+        self.last_protected = None
+
+    def can_protect(self, player_id):
+        return player_id != self.last_protected
+
+    def protect(self, player_id):
+        self.last_protected = player_id
 
 
 def get_character_by_name(name):
@@ -84,6 +103,7 @@ def get_character_by_name(name):
         "Seer": Seer(),
         "Witch": Witch(),
         "Hunter": Hunter(),
+        "Guard": Guard(),
     }
 
     if name not in characters:

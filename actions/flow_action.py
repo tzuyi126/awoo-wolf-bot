@@ -1,11 +1,16 @@
-from . import wolves_action, seer_action, witch_action
+from . import wolves_action, seer_action, witch_action, guard_action
 
 
-async def start_night_phase(bot, ctx, game):
+async def start_night_phase(ctx, game):
     game.game_state.set_night()
     await ctx.send("🌕 AWOOOOO! The night has fallen!")
 
+    guard_target = await guard_action.guard(ctx, game)
+
     wolves_target = await wolves_action.hunt(ctx, game)
+
+    if guard_target == wolves_target:
+        guard_target = wolves_target = None
 
     await seer_action.check(ctx, game)
 
