@@ -6,6 +6,7 @@ from collections import Counter
 from load_env_var import EnvConfig
 from game import Game
 from methods import check_if_game_exists, dm_player_role, check_game_over
+from actions import flow_action
 from discordui.game_control import NewGameView
 
 # Load environment variables
@@ -56,7 +57,8 @@ async def commands(ctx):
         "Here are the commands you can use:\n"
         "`!new` - Start a new game.\n"
         "`!list` - List all players and all roles in the current game.\n"
-        "`!check` - Check your role in the game.\nAwoo wolf will send you a DM with your role and abilities.\n"
+        "`!check` - Check your role in the game. Awoo wolf will send you a DM with your role and abilities.\n"
+        "`!night` - Start the night phase of the game.\n"
         "`!end` - End the current game.\n"
     )
     await ctx.send(help_text)
@@ -77,7 +79,7 @@ async def new(ctx):
     embed = discord.Embed(
         title="AWOO WEREWOLF - New Game Created!",
         description="A new game has been created!\nCome join the deception and mystery. Can you survive the night?",
-        color=discord.Color.red(),
+        color=discord.Color.dark_red(),
     )
 
     view = NewGameView(bot, ctx.channel.id)
@@ -137,6 +139,23 @@ async def check(ctx):
             )
     else:
         await ctx.reply("You are not part of the current game.")
+
+
+@bot.command()
+async def night(ctx):
+    if not check_if_game_exists(bot, ctx.channel.id):
+        await ctx.reply(
+            "No game is currently active in this channel. Use `!new` to create a new game."
+        )
+        return
+    
+    game = bot.active_game_channels[ctx.channel.id]
+
+    if not game.is_day():
+        await ctx.reply("Patience. It's not yet time for nightfall.")
+        return
+
+    await flow_action.start_night_phase(bot, ctx, game)
 
 
 @bot.command()

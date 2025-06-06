@@ -1,6 +1,6 @@
 import discord
 
-from methods import dm_player_role, start_night_phase
+from methods import dm_player_role
 from load_env_var import EnvConfig
 
 envConfig = EnvConfig()
@@ -8,12 +8,17 @@ envConfig = EnvConfig()
 
 class NewGameView(discord.ui.View):
     def __init__(self, bot, channel_id):
-        super().__init__(timeout=None)
+        super().__init__(timeout=envConfig.UI_TIMEOUT_SEC)
         self.bot = bot
         self.channel_id = channel_id
 
         self.add_item(self.JoinGameButton())
         self.add_item(self.StartGameButton())
+
+    async def disable_all_buttons(self):
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                item.disabled = True
 
     class JoinGameButton(discord.ui.Button):
         def __init__(self):
@@ -39,7 +44,7 @@ class NewGameView(discord.ui.View):
                 )
 
             except Exception:
-                self.disabled = True
+                await self.view.disable_all_buttons()
                 await interaction.response.edit_message(view=self.view)
                 await interaction.followup.send(
                     "You cannot interact with this button at the time.", ephemeral=True
@@ -62,61 +67,26 @@ class NewGameView(discord.ui.View):
                     )
                     return
 
-                self.disabled = True
+                await self.view.disable_all_buttons()
                 await interaction.response.edit_message(view=self.view)
                 await interaction.followup.send(
                     "The game is starting! Prepare yourselves!", ephemeral=False
                 )
+
                 game.start()
 
                 for player in game.players.values():
                     await dm_player_role(interaction.channel, player, game.wolves)
 
                 await interaction.channel.send(
-                    "💡 You can mute your mic during the night to avoid spoilers.\n"
-                    "⬇️ Whenever you are ready, press the button below to start the night.",
-                    view=StartNightButton(self.view.bot),
+                    "Your role has been sent to your DMs! Use `!check` if you want the information resent.\n"
+                    "💡 You may mute your microphone during the night to avoid spoilers.\n"
+                    "🌙 When you are ready, type `!night` to begin the night.",
                 )
 
             except Exception:
-                self.disabled = True
+                self.view.disable_all_buttons()
                 await interaction.response.edit_message(view=self.view)
                 await interaction.followup.send(
                     "You cannot interact with this button at the time.", ephemeral=True
                 )
-
-
-class StartNightButton(discord.ui.View):
-    def __init__(self, bot):
-        super().__init__(timeout=None)
-        self.bot = bot
-
-    @discord.ui.button(
-        label="The night has fallen.",
-        style=discord.ButtonStyle.danger,
-        custom_id="start_night_phase",
-        emoji="🌑",
-    )
-    async def start_night(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        try:
-            game = self.bot.active_game_channels[interaction.channel.id]
-
-            if not game.is_day():
-                await interaction.response.send_message(
-                    "Patience. It's not yet time for nightfall.", ephemeral=True
-                )
-                return
-
-            button.disabled = True
-            await interaction.response.edit_message(view=self)
-
-            await start_night_phase(self.bot, interaction, game)
-
-        except Exception:
-            button.disabled = True
-            await interaction.response.edit_message(view=self)
-            await interaction.followup.send(
-                "You cannot interact with this button at the time.", ephemeral=True
-            )

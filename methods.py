@@ -1,26 +1,13 @@
 import os
 import discord
 
-from actions import wolves_action, seer_action
-
 
 def check_if_game_exists(bot, channel_id):
     return channel_id in bot.active_game_channels.keys()
 
 
-async def start_night_phase(bot, interaction, game):
-    if await check_game_over(bot, interaction.channel, game):
-        return
-
-    game.game_state.set_night()
-    await interaction.channel.send("AWOOOOO! The night has fallen!")
-
-    victim = await wolves_action.hunt(interaction, game)
-
-    await seer_action.check(interaction, game)
-
-    if await check_game_over(bot, interaction.channel, game):
-        return
+def check_if_role_exists(game, role):
+    return role in game.roles
 
 
 async def dm_player_role(channel, player, wolves):
@@ -46,7 +33,7 @@ def create_player_role_embed(player, wolves):
 
     embed.set_thumbnail(url=f"attachment://{os.path.basename(player.character.pic)}")
 
-    if player.is_wolf:
+    if player.is_wolf():
         embed.add_field(
             name="The Wolf Pack (Only the wolves know!)",
             value=", ".join([wolf for wolf in wolves]),

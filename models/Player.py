@@ -6,6 +6,7 @@ class User:
         self.id = id
         self.name = name
         self.mention = mention
+        self.display_name = name
 
 
 class Player:
@@ -14,16 +15,18 @@ class Player:
 
         self.character = None  # Will be set when the game starts
         self.is_alive = True
-        self.is_wolf = False  # Will be set based on the character role
-        self.is_god = False  # Will be set based on the character role
 
     def __str__(self):
         return f"{self.character.description}\nYou are {'ALIVE' if self.is_alive else 'DEAD'}!"
 
     def set_character(self, character: "Character"):
         self.character = character
-        self.is_wolf = character.role == "Werewolf"
-        self.is_god = character.role in ["Seer", "Witch", "Hunter"]
+
+    def is_wolf(self):
+        return self.character and self.character.role == "Werewolf"
+    
+    def is_god(self):
+        return self.character and self.character.role in ["Seer", "Witch", "Hunter"]
 
     def kill(self):
         self.is_alive = False

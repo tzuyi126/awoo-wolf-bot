@@ -53,19 +53,17 @@ class Witch(Character):
         self.heal_potion = True
         self.kill_potion = True
 
-    def heal(self, target):
-        if self.heal_potion:
-            self.heal_potion = False
-            target.heal()
-            return True
-        return False
+    def can_heal(self):
+        return self.heal_potion
 
-    def kill(self, target):
-        if self.kill_potion:
-            self.kill_potion = False
-            target.kill()
-            return True
-        return False
+    def can_kill(self):
+        return self.kill_potion
+
+    def heal(self):
+        self.heal_potion = False
+
+    def kill(self):
+        self.kill_potion = False
 
 
 class Hunter(Character):

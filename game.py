@@ -116,17 +116,17 @@ class Game:
 
     def check_if_wolves_alive(self):
         return any(
-            player.is_wolf and player.is_alive for player in self.players.values()
+            player.is_wolf() and player.is_alive for player in self.players.values()
         )
 
     def check_if_villagers_alive(self):
         return any(
-            not player.is_wolf and player.is_alive for player in self.players.values()
+            not player.is_wolf() and not player.is_god() and player.is_alive for player in self.players.values()
         )
 
     def check_if_gods_alive(self):
         return any(
-            player.is_god and player.is_alive for player in self.players.values()
+            player.is_god() and player.is_alive for player in self.players.values()
         )
 
     def is_day(self):
@@ -157,14 +157,14 @@ class Game:
             player.set_character(get_character_by_name(role))
 
             if role == "Werewolf":
-                self.wolves.add(player.user.name)
+                self.wolves.add(player.user.display_name)
 
     def kill_player(self, player_id):
         if player_id in self.players:
             player = self.players[player_id]
             player.kill()
 
-            print(f"Player {player.user.name} has been killed.")
+            print(f"Player {player.user.display_name} has been killed.")
             return True
         else:
             print(f"Player with ID {player_id} does not exist.")
