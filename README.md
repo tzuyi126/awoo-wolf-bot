@@ -1,5 +1,5 @@
 # Awoo Wolf Bot
-A Discord bot designed to play Werewolf game on Discord.
+Awoo Wolf Bot brings the classic Werewolf party game to your Discord server with automated role assignment, interactive commands, and seamless game management. Gather your friends, outwit your opponents, and enjoy a thrilling social deduction experience—all within Discord!
 
 ## Features
 
