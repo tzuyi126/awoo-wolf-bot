@@ -15,9 +15,13 @@ async def check(ctx, game):
         "🔮 The Seer wakes at night and sees through the veil of secrets..."
     )
 
-    seer = next(player for player in game.players.values() if player.character.role == "Seer")
-    
-    alive_players = [player for player in game.players.values() if player.is_alive and player != seer]
+    seer = next(
+        player for player in game.players.values() if player.character.role == "Seer"
+    )
+
+    alive_players = [
+        player for player in game.players.values() if player.is_alive and player != seer
+    ]
 
     embed = discord.Embed(
         title="Choose a player to reveal their personality:",

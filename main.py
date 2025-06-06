@@ -148,7 +148,7 @@ async def night(ctx):
             "No game is currently active in this channel. Use `!new` to create a new game."
         )
         return
-    
+
     game = bot.active_game_channels[ctx.channel.id]
 
     if not game.is_day():
@@ -157,12 +157,12 @@ async def night(ctx):
 
     if await check_game_over(bot, ctx.channel, game):
         return
-    
+
     await flow_action.start_night_phase(bot, ctx, game)
 
     if await check_game_over(bot, ctx.channel, game):
         return
-    
+
     await ctx.send(
         "⚔️ Discuss with the living, and use `!kill <player_name>` to conduct an execution.\n"
         "🌙 When ready, type `!night` to start the next night."
@@ -184,7 +184,9 @@ async def kill(ctx, *, player_name: str = None):
         return
 
     if not player_name:
-        await ctx.reply("Please specify a player to execute. Usage: `!kill <player_name>`")
+        await ctx.reply(
+            "Please specify a player to execute. Usage: `!kill <player_name>`"
+        )
         return
 
     # Try to find the player by display name or username (case-insensitive)

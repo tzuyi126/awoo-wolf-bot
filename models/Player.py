@@ -24,7 +24,7 @@ class Player:
 
     def is_wolf(self):
         return self.character and self.character.role == "Werewolf"
-    
+
     def is_god(self):
         return self.character and self.character.role in ["Seer", "Witch", "Hunter"]
 

@@ -28,7 +28,9 @@ class ActionView(discord.ui.View):
             view: ActionView = self.view
 
             if not view.decision_maker.is_alive:
-                await interaction.response.send_message("You cannot take action because you are dead!")
+                await interaction.response.send_message(
+                    "You cannot take action because you are dead!"
+                )
                 return
 
             # If this button is already selected (success), unselect it (withdraw vote)

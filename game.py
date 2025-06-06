@@ -121,7 +121,8 @@ class Game:
 
     def check_if_villagers_alive(self):
         return any(
-            not player.is_wolf() and not player.is_god() and player.is_alive for player in self.players.values()
+            not player.is_wolf() and not player.is_god() and player.is_alive
+            for player in self.players.values()
         )
 
     def check_if_gods_alive(self):
@@ -164,5 +165,5 @@ class Game:
             player = self.players[player_id]
             player.kill()
             return True
-        
+
         return False

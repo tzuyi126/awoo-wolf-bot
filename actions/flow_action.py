@@ -1,5 +1,5 @@
-
 from . import wolves_action, seer_action, witch_action
+
 
 async def start_night_phase(bot, ctx, game):
     game.game_state.set_night()
@@ -14,16 +14,20 @@ async def start_night_phase(bot, ctx, game):
     await ctx.send("🌞 Dawn breaks!")
 
     if (not wolves_target and not witch_target) or wolves_target == witch_target:
-        await ctx.send("The village awakens to a peaceful morning. **No one** was lost in the night.")
+        await ctx.send(
+            "The village awakens to a peaceful morning. **No one** was lost in the night."
+        )
     else:
         victims = [v for v in [wolves_target, witch_target] if v is not None]
-        
+
         for victim in victims:
             game.kill_player(victim.user.id)
 
-        victim_names = "** and **".join(sorted([victim.user.display_name for victim in victims]))
-        await ctx.send(f"As the sun rises, the villagers gather and discover that **{victim_names}** got killed during the night.")
+        victim_names = "** and **".join(
+            sorted([victim.user.display_name for victim in victims])
+        )
+        await ctx.send(
+            f"As the sun rises, the villagers gather and discover that **{victim_names}** got killed during the night."
+        )
 
     game.game_state.set_day()
-
-    

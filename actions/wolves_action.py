@@ -10,13 +10,9 @@ envConfig = EnvConfig()
 
 
 async def hunt(ctx, game):
-    await ctx.channel.send(
-        "🐺 The Wolves are gathering to decide their victim..."
-    )
+    await ctx.channel.send("🐺 The Wolves are gathering to decide their victim...")
 
-    wolves = [
-        player for player in game.players.values() if player.is_wolf()
-    ]
+    wolves = [player for player in game.players.values() if player.is_wolf()]
     alive_players = [player for player in game.players.values() if player.is_alive]
 
     embed = discord.Embed(
@@ -65,9 +61,7 @@ async def hunt(ctx, game):
             else:
                 target_id = candidates[0]
                 target = game.players.get(target_id)
-                msg = (
-                    f"You have chosen your victim: {target.user.display_name}."
-                )
+                msg = f"You have chosen your victim: {target.user.display_name}."
 
             for wolf in wolves:
                 try:
@@ -78,9 +72,7 @@ async def hunt(ctx, game):
         await ctx.channel.send("🐺 The Wolves have made their choice.")
 
         return target
-    
-    await ctx.channel.send(
-        "🐺 The Wolves failed to agree on a victim tonight."
-    )
+
+    await ctx.channel.send("🐺 The Wolves failed to agree on a victim tonight.")
 
     return None
