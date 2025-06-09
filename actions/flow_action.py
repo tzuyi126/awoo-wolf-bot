@@ -16,11 +16,9 @@ async def start_night_phase(ctx, game):
 
     witch_target = await witch_action.heal_or_kill(ctx, game, wolves_target)
 
-    await ctx.send("🌞 Dawn breaks!")
-
     if (not wolves_target and not witch_target) or wolves_target == witch_target:
         await ctx.send(
-            "The village awakens to a peaceful morning. **No one** was lost in the night."
+            "🌞 Dawn breaks! The village awakens to a peaceful morning. **No one** was lost in the night."
         )
     else:
         victims = [v for v in [wolves_target, witch_target] if v is not None]
@@ -32,7 +30,7 @@ async def start_night_phase(ctx, game):
             sorted([victim.user.display_name for victim in victims])
         )
         await ctx.send(
-            f"As the sun rises, the villagers gather and discover that **{victim_names}** got killed during the night."
+            f"🌞 As the sun rises, the villagers gather and discover that **{victim_names}** got killed during the night."
         )
 
     game.game_state.set_day()

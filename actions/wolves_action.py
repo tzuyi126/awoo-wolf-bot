@@ -10,7 +10,7 @@ envConfig = EnvConfig()
 
 
 async def hunt(ctx, game):
-    await ctx.channel.send("🐺 The Wolves are gathering to decide their victim...")
+    await ctx.channel.send("🐺 The Wolves are gathering to decide their victim...", silent=True)
 
     wolves = [player for player in game.players.values() if player.is_wolf()]
     alive_players = [player for player in game.players.values() if player.is_alive]
@@ -41,11 +41,10 @@ async def hunt(ctx, game):
             night_votes[wolf.user.id] = voted_id
         elif wolf.is_alive:
             try:
-                await wolf.user.send("You did not vote in time.")
-            except Exception:
-                pass
+                await wolf.user.send("You did not vote in time.", silent=True)
+            except Exception as e:
+                print(f"Error sending DM to player: {e}")
 
-    # Tally votes and process elimination after all wolves have voted or timeout
     if night_votes:
         vote_counts = Counter(night_votes.values())
         max_votes = max(vote_counts.values())
@@ -65,14 +64,14 @@ async def hunt(ctx, game):
 
             for wolf in wolves:
                 try:
-                    await wolf.user.send(msg)
-                except Exception:
-                    pass  # Ignore DM failures
+                    await wolf.user.send(msg, silent=True)
+                except Exception as e:
+                    print(f"Error sending DM to player: {e}")
 
-        await ctx.channel.send("🐺 The Wolves have made their choice.")
+        await ctx.channel.send("🐺 The Wolves have made their choice.", silent=True)
 
         return target
 
-    await ctx.channel.send("🐺 The Wolves failed to agree on a victim tonight.")
+    await ctx.channel.send("🐺 The Wolves failed to agree on a victim tonight.", silent=True)
 
     return None

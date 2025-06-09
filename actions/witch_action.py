@@ -12,7 +12,7 @@ async def heal_or_kill(ctx, game, victim):
         return None
 
     await ctx.channel.send(
-        "🧪 The Witch considers using the potion, pondering whether to alter the fate of the night..."
+        "🧪 The Witch considers using the potion, pondering whether to alter the fate of the night...", silent=True
     )
 
     witch = next(
@@ -39,23 +39,23 @@ async def heal_or_kill(ctx, game, victim):
 
     target_id = await send_dm_action(alive_players, witch, [], embed)
 
-    await ctx.channel.send("🧪 The Witch has made a choice, and only for the good.")
+    await ctx.channel.send("🧪 The Witch has made a choice, and only for the good.", silent=True)
 
     if target_id:
         target = game.players.get(target_id)
 
         if target == victim and witch.character.can_heal():
-            await witch.user.send(f"You healed {target.user.display_name}.")
+            await witch.user.send(f"You healed {target.user.display_name}.", silent=True)
             witch.character.heal()
             return target
 
         if target != victim and witch.character.can_kill():
-            await witch.user.send(f"You poisoned {target.user.display_name}.")
+            await witch.user.send(f"You poisoned {target.user.display_name}.", silent=True)
             witch.character.kill()
             return target
 
         await witch.user.send(
-            "You couldn't use a potion, probably because you're out of that type."
+            "You couldn't use a potion, probably because you're out of that type of potion.", silent=True
         )
 
     return None

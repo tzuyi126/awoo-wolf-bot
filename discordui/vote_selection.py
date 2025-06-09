@@ -29,7 +29,7 @@ class ActionView(discord.ui.View):
 
             if not view.decision_maker.is_alive:
                 await interaction.response.send_message(
-                    "You cannot take action because you are dead!"
+                    "You cannot take action because you are dead!", silent=True
                 )
                 return
 
@@ -42,12 +42,14 @@ class ActionView(discord.ui.View):
                 for result_recipient in view.result_recipients:
                     try:
                         await result_recipient.user.send(
-                            f"{view.decision_maker.user.display_name} has withdrawn their vote."
+                            f"{view.decision_maker.user.display_name} has withdrawn their vote.", silent=True
                         )
-                    except Exception:
+                    except Exception as e:
                         await interaction.channel.send(
-                            f"Failed to notify {result_recipient.user.display_name} about the vote withdrawal."
+                            f"Failed to notify {result_recipient.user.display_name} about the vote withdrawal.", silent=True
                         )
+                        print(f"Error sending DM to player: {e}")
+
                 return
 
             # Reset all buttons to secondary style
@@ -64,19 +66,20 @@ class ActionView(discord.ui.View):
             for result_recipient in view.result_recipients:
                 try:
                     await result_recipient.user.send(
-                        f"{view.decision_maker.user.display_name} has voted {self.player.user.display_name}."
+                        f"{view.decision_maker.user.display_name} has voted {self.player.user.display_name}.", silent=True
                     )
-                except Exception:
+                except Exception as e:
                     await interaction.channel.send(
-                        f"Failed to notify {result_recipient.user.display_name} about the vote."
+                        f"Failed to notify {result_recipient.user.display_name} about the vote.", silent=True
                     )
+                    print(f"Error sending DM to player: {e}")
 
 
 async def send_dm_action(button_players, decision_maker, result_recipients, embed):
     view = ActionView(button_players, decision_maker, result_recipients)
 
     try:
-        message = await decision_maker.user.send(embed=embed, view=view)
+        message = await decision_maker.user.send(embed=embed, view=view, silent=True)
 
         for remaining in range(envConfig.ACTION_TIMEOUT_SEC - 1, -1, -1):
             await asyncio.sleep(1)
@@ -84,9 +87,9 @@ async def send_dm_action(button_players, decision_maker, result_recipients, embe
 
             try:
                 await message.edit(embed=embed, view=view)
-            except Exception:
-                break  # DM closed or deleted
-    except Exception:
-        pass
+            except Exception as e:
+                print(f"Error editing action countdown: {e}")
+    except Exception as e:
+        print(f"Error sending DM action to player: {e}")
 
     return view.value

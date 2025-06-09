@@ -1,8 +1,10 @@
 import os
 import discord
+import logging
 
 
 def check_if_game_exists(bot, channel_id):
+    # Prevent multiple games in the same channel
     return channel_id in bot.active_game_channels.keys()
 
 
@@ -14,8 +16,9 @@ async def dm_player_role(channel, player, wolves):
     try:
         embed, file = create_player_role_embed(player, wolves)
         await player.user.send(embed=embed, file=file)
-    except Exception:
+    except Exception as e:
         await channel.send(f"❌ Could not send DM to {player.user.mention}.")
+        print(f"Error sending DM to player: {e}")
 
 
 def create_player_role_embed(player, wolves):

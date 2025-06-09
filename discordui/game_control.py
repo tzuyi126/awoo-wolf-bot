@@ -2,6 +2,7 @@ import discord
 
 from methods import dm_player_role
 from load_env_var import EnvConfig
+import logging
 
 envConfig = EnvConfig()
 
@@ -43,12 +44,13 @@ class NewGameView(discord.ui.View):
                     ephemeral=False,
                 )
 
-            except Exception:
+            except Exception as e:
                 await self.view.disable_all_buttons()
                 await interaction.response.edit_message(view=self.view)
                 await interaction.followup.send(
                     "You cannot interact with this button at the time.", ephemeral=True
                 )
+                print(f"Error interacting with button: {e}")
 
     class StartGameButton(discord.ui.Button):
         def __init__(self):
@@ -84,9 +86,10 @@ class NewGameView(discord.ui.View):
                     "🌙 When you are ready, type `!night` to begin the night.",
                 )
 
-            except Exception:
-                self.view.disable_all_buttons()
+            except Exception as e:
+                await self.view.disable_all_buttons()
                 await interaction.response.edit_message(view=self.view)
                 await interaction.followup.send(
                     "You cannot interact with this button at the time.", ephemeral=True
                 )
+                print(f"Error interacting with button: {e}")

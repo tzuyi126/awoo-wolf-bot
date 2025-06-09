@@ -13,7 +13,7 @@ class Player:
     def __init__(self, user):
         self.user = user
 
-        self.character = None  # Will be set when the game starts
+        self.character = None  # Will be set after the game starts
         self.is_alive = True
 
     def __str__(self):
