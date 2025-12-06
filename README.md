@@ -19,7 +19,7 @@ Awoo Wolf Bot brings the classic Werewolf party game to your Discord server with
 ## Getting Started
 
 1. Invite the bot to your Discord server.
-2. Use `/start` to begin a new game.
+2. Use `!new` to begin a new game.
 3. Follow the prompts to add players and play the game.
 
 ## Commands
@@ -30,3 +30,7 @@ Awoo Wolf Bot brings the classic Werewolf party game to your Discord server with
 - `!night` — Initiate the night phase.
 - `!kill <player_name>` — Eliminate a player during the day.
 - `!end` — End the ongoing game session.
+
+## Developer Guide
+1. Create and activate virtual environment, then download required packages.
+2. Go to Discord Bot Developer Portal and generate a token. Create a .env file and assign the token as **DISCORD_TOKEN**.
